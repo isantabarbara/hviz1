@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Example</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <script>
+    // Load data from "data.csv"
+    d3.dsv(",", "HipotecasEspana.csv", function(d) {
+      return {
+        comunity: d.ComunidadesAutonomas,
+        year: +d.Year,
+        importeMedio: +d.ImporteMedio,
+        total: +d.NumeroTotal // convert "Length" column to number
+      };
+    }).then(function(data) {
+      console.log(data);
+    
+      // Set the dimensions and margins of the graph
+      var margin = {top: 20, right: 20, bottom: 70, left: 80},
+          width = 600 - margin.left - margin.right,
+          height = 300 - margin.top - margin.bottom;
+    
+      // Set the ranges
+      var x = d3.scaleLinear().range([0, width]);
+      var y = d3.scaleLinear().range([height, 0]);
+    
+      // Define the line
+      var valueline = d3.line()
+        .x(function(d) { return x(d.year); })
+        .y(function(d) { return y(d.importeMedio); });
+    
+      // Append the svg object to the body of the page
+      var svg = d3.select("body").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform", 
+                "translate(" + margin.left + "," + margin.top + ")");
+    
+      // Scale the range of the data
+      x.domain(d3.extent(data, function(d) { return d.year; }));
+      y.domain([0, d3.max(data, function(d) { return d.importeMedio; })]);
+    
+      // Group the data by community
+      var dataGrouped = d3.group(data, d => d.comunity);
+    
+      // Loop through each community / key
+      dataGrouped.forEach(function(values, key) {
+          svg.append("path")
+              .attr("class", "line")
+              .attr("d", valueline(values))
+              .style("stroke", function() { // Add dynamically
+                  return d.color = d3.scaleOrdinal(d3.schemeCategory10)(key); 
+              });
+      });
+    
+      // Add the X Axis
+      svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x));
+    
+      // Add the Y Axis
+      svg.append("g")
+          .call(d3.axisLeft(y));
+    
+    })
+    </script>
+    
+    
+</body>
+</html>

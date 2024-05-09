@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Example</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <script>
+        // Load data from "data.csv"
+        d3.dsv(",", "HipotecasEspana.csv", function(d) {
+  return {
+    comunity: d.ComunidadesAutonomas,
+    year: +d.Year,
+    importeMedio: +d.ImporteMedio,
+    total: +d.NumeroTotal // convert "Length" column to number
+  };
+}).then(function(data) {
+  console.log(data);
+
+  data.sort(function(a, b) {
+    return d3.descending(a.ImporteTotal, b.ImporteMedio);
+});
+
+  data.forEach(function(d){
+    //d3.select("body").append("p").text(d.comunity + " " + d.year + " " + d.importeMedio);
+  });
+
+       // Assuming data is loaded and parsed into a variable named 'data'
+// You might need to adjust the field names according to your actual CSV file
+
+// Set the dimensions and margins of the graph
+var margin = {top: 20, right: 20, bottom: 70, left: 80},
+    width = 600 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+
+// Set the ranges
+var x = d3.scaleBand().range([0, width]).padding(0.1);
+var y = d3.scaleLinear().range([height, 0]);
+
+// Append the svg object to the body of the page
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height+100 + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// Scale the range of the data in the domains
+x.domain(data.map(function(d) { return d.comunity; }));
+y.domain([0, d3.max(data, function(d) { return d.importeMedio; })]);
+
+// Append the rectangles for the bar chart
+svg.selectAll(".bar")
+    .data(data)
+  .enter().append("rect")
+    .attr("class", "bar")
+    .attr("x", function(d) { return x(d.comunity); })
+    .attr("width", x.bandwidth())
+    .attr("y", function(d) { return y(d.importeMedio); })
+    .attr("height", function(d) { return height - y(d.importeMedio); })
+    .attr("fill", "blue");
+
+
+    // Add the x Axis
+svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x))
+    .selectAll("text")  
+    .style("text-anchor", "end")
+    .attr("dx", "-.8em")
+    .attr("dy", ".15em")
+    .attr("transform", "rotate(-65)");
+
+
+    var yAxis = svg.append("g")
+    .call(d3.axisLeft(y));
+
+// Add a label to the y Axis
+yAxis.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left + 20)
+    .attr("x",0 - (height / 2))
+    .attr("dy", "1em")
+    .style("text-anchor", "end")
+    .text("ImporteMedio (k€)");
+
+})
+        
+    </script>
+</body>
+</html>
